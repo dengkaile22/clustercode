@@ -181,7 +181,7 @@ Every guard is evaluated in `decide()`; there is no second copy of the rules.
 ```
 npm run check
   typecheck (tsc --noEmit, TSX included)
-  169 test assertions (node --test, no model, no network)
+  170 test assertions (node --test, no model, no network)
   build: dist/gui-experimental.cjs + TUI compile check
   entry probe: server / tui / desktop all resolve
   TUI wiring + desktop wiring

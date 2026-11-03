@@ -182,7 +182,7 @@ Todo se evalúa en `decide()`; no hay una segunda copia de las reglas.
 ```
 npm run check
   typecheck (tsc --noEmit, TSX incluido)
-  169 aserciones (node --test, sin modelo, sin red)
+  170 aserciones (node --test, sin modelo, sin red)
   build: dist/gui-experimental.cjs + comprobación de compilación de la TUI
   sondeo de entradas: servidor / tui / escritorio resueltos
   cableado de la TUI + cableado del escritorio

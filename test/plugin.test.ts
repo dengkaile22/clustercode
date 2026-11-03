@@ -285,7 +285,8 @@ describe("heartbeat", () => {
     await heartbeatTick(harness.ctx, store(), now);
     assert.equal(harness.synthetics.length, 1);
 
-    await heartbeatTick(harness.ctx, store(), now + 120_000);
+    // Still inside the wake cooldown, but a guard now says stop: it stops anyway.
+    await heartbeatTick(harness.ctx, store(), now + 1_000);
     assert.equal(harness.synthetics.length, 1);
     const state = await store().load(TEST_SESSION);
     assert.equal(state.active, false);

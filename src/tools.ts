@@ -418,7 +418,33 @@ export function registerTools(ctx: any, runtime: Runtime) {
         });
 
         const tasks = [...existing, ...toRuntimeTasks(planned)];
-        const state = stateFor({ goal: String(input.goal ?? "").trim(), tasks, team: latest.team }, input, previous);
+        // Appending to a live queue must not restart the run: keep the turn counter,
+        // the cap and the created time, and only clear what stopped it.
+        const state: ClusterState = append
+          ? {
+              ...latest,
+              active: true,
+              goal: String(input.goal ?? "").trim() || latest.goal,
+              tasks,
+              maxRounds:
+                input.maxRounds === undefined
+                  ? latest.maxRounds
+                  : Number(input.maxRounds) > 0
+                    ? Math.floor(Number(input.maxRounds))
+                    : null,
+              maxStagnant:
+                input.maxStagnant === undefined ? latest.maxStagnant : stagnantLimit(input.maxStagnant),
+              heartbeat: input.heartbeat === true ? true : latest.heartbeat,
+              heartbeatMs:
+                input.heartbeatMs === undefined
+                  ? latest.heartbeatMs
+                  : Math.max(MIN_HEARTBEAT_MS, Number(input.heartbeatMs) || DEFAULT_HEARTBEAT_MS),
+              stagnant: 0,
+              lastFingerprint: "",
+              stoppedCode: "",
+              stoppedReason: undefined,
+            }
+          : stateFor({ goal: String(input.goal ?? "").trim(), tasks, team: latest.team }, input, previous);
         await runtime.store.save(sessionID, state);
         runtime.publish(sessionID, state);
 
@@ -533,6 +559,9 @@ export function registerTools(ctx: any, runtime: Runtime) {
 
         if (input.id && !target) {
           return { content: `There is no task ${String(input.id)}.` };
+        }
+        if (target && target.status !== "failed") {
+          return { content: `${target.id} is "${target.status}", not failed. Only failed tasks are retried.` };
         }
         const reset = target ? [target] : state.tasks.filter((t) => t.status === "failed");
         if (reset.length === 0) {

@@ -102,9 +102,8 @@ export async function heartbeatTick(ctx: any, store: ClusterStore, now = Date.no
   for (const { sessionID, state } of all) {
     if (!state.active || !state.heartbeat) continue;
 
-    const cooldown = Math.max(MIN_HEARTBEAT_MS, state.heartbeatMs || 60_000);
-    if (state.lastWakeAt && now - state.lastWakeAt < cooldown) continue;
-
+    // Decide before the cooldown check: a run that hit its round cap must be stopped
+    // now, not after the heartbeat interval. Only the *wake-up* needs the cooldown.
     const decision = decide(state);
     if (decision.type === "wait") continue;
     if (decision.type === "stop") {
@@ -113,6 +112,9 @@ export async function heartbeatTick(ctx: any, store: ClusterStore, now = Date.no
       publish(sessionID, state);
       continue;
     }
+
+    const cooldown = Math.max(MIN_HEARTBEAT_MS, state.heartbeatMs || 60_000);
+    if (state.lastWakeAt && now - state.lastWakeAt < cooldown) continue;
 
     if (!(await isSessionIdle(ctx, sessionID))) continue;
 

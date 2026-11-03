@@ -36,7 +36,7 @@ First public version. An independent rewrite of the ideas in `unlimited-agent-cl
 - **Persistence** with an in-memory cache and per-session serialised writes, plus a `FileStorage`
   backend for environments without plugin storage.
 - **Documentation** in English, Simplified Chinese, French, Japanese, Spanish and Portuguese.
-- **Checks**: typecheck, 169 test assertions, desktop bundle, TUI compile check, host-style entry
+- **Checks**: typecheck, 170 test assertions, desktop bundle, TUI compile check, host-style entry
   probe, TUI wiring check, desktop wiring check.
 
 ### Notes

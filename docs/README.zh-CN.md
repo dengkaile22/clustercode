@@ -168,7 +168,7 @@ server（src/index.ts）
 ```
 npm run check
   类型检查（tsc --noEmit，含 TSX）
-  169 项断言（node --test，不调模型、不联网）
+  170 项断言（node --test，不调模型、不联网）
   构建：dist/gui-experimental.cjs + TUI 编译检查
   入口探测：server / tui / desktop 三半都能解析
   TUI 接线检查 + Desktop 接线检查

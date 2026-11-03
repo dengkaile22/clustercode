@@ -90,8 +90,15 @@ describe("cluster_plan", () => {
 
   it("appends to a live queue without losing progress", async () => {
     await setup();
-    await harness.callTool("cluster_plan", { goal: "x", tasks: [{ id: "t1", title: "a" }] });
+    await harness.callTool("cluster_plan", {
+      goal: "x",
+      tasks: [{ id: "t1", title: "a" }],
+      maxRounds: 9,
+    });
     await harness.callTool("cluster_update", { id: "t1", status: "done" });
+    const before = await runtime.store.load(TEST_SESSION);
+    before.round = 4;
+    await runtime.store.save(TEST_SESSION, before);
 
     const result = await harness.callTool("cluster_plan", {
       goal: "x",
@@ -105,6 +112,9 @@ describe("cluster_plan", () => {
     assert.equal(state.tasks[0].status, "done");
     assert.equal(state.tasks[1].status, "pending");
     assert.equal(state.active, true);
+    // Appending continues the run instead of restarting it.
+    assert.equal(state.round, 4);
+    assert.equal(state.maxRounds, 9);
   });
 
   it("warns about an unrunnable graph instead of pretending it is fine", async () => {
@@ -205,6 +215,16 @@ describe("cluster_retry", () => {
     await harness.callTool("cluster_plan", { goal: "x", tasks: [{ id: "t1", title: "a" }] });
     const result = await harness.callTool("cluster_retry", { id: "zz" });
     assert.match(result.content, /no task zz/);
+  });
+
+  it("refuses to reset a task that did not fail", async () => {
+    await setup();
+    await harness.callTool("cluster_plan", { goal: "x", tasks: [{ id: "t1", title: "a" }] });
+    const result = await harness.callTool("cluster_retry", { id: "t1" });
+    assert.match(result.content, /not failed/);
+    const state = await runtime.store.load(TEST_SESSION);
+    assert.equal(state.tasks[0].status, "pending");
+    assert.equal(state.tasks[0].attempts, undefined);
   });
 });
 

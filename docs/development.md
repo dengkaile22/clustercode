@@ -63,7 +63,7 @@ against. If the reference checkout and the installed types disagree, the install
 ## Test strategy
 
 `npm run test` uses `node --test` with native TypeScript type stripping: no bundler, no transpiler,
-no model, no network. 169 assertions currently.
+no model, no network. 170 assertions currently.
 
 - **Pure logic** (state, scheduler, plan, status) is tested directly.
 - **Host interaction** goes through `test/support/harness.ts`, a fake context implementing exactly

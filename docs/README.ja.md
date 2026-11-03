@@ -174,7 +174,7 @@ UI の 2 つの半分は RPC しか読みません。サーバーのメモリに
 ```
 npm run check
   型チェック（tsc --noEmit、TSX 含む）
-  169 個のアサーション（node --test、モデルもネットワークも不要）
+  170 個のアサーション（node --test、モデルもネットワークも不要）
   ビルド: dist/gui-experimental.cjs + TUI コンパイル確認
   入口検査: server / tui / desktop すべて解決
   TUI 配線検査 + desktop 配線検査
