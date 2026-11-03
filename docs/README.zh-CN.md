@@ -127,6 +127,11 @@ cluster_plan({
 
 `reviewer` 的只读是**策略层**限制，不是沙箱。真要让 agent 碰不到文件，得在 OS 层限制。
 
+成员的 agent 文件是 `mode: primary` + `hidden: true`：不会把 Shift+Tab 的循环列表撑大，只有
+`clustercode` 自己对用户可见。`switchAgent` 不校验这两个字段，所以隐藏不影响轮换。缩小团队时
+只删除不再需要的受管文件，手写文件一律不动；要彻底清理就删 `~/.config/opencode/agents` 下的
+`clustercode*.md`。
+
 ## 一轮是怎么跑的
 
 ```

@@ -140,6 +140,12 @@ y `model`.
 El asiento `reviewer` es una restricción de **política**, no un sandbox. Si un agente no debe tocar
 el sistema de archivos, limítalo a nivel de sistema operativo.
 
+Los agentes miembro se escriben como `mode: primary` + `hidden: true`: no llenan el selector de
+Shift+Tab y solo `clustercode` es visible. `switchAgent` no comprueba esos campos, así que ocultarlos
+no detiene la rotación. Reducir el equipo borra los archivos gestionados que ya no se usan y deja
+intactos los escritos a mano; para eliminar todo, borra `clustercode*.md` en
+`~/.config/opencode/agents`.
+
 ## Cómo funciona un turno
 
 ```

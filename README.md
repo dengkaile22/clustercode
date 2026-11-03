@@ -140,6 +140,12 @@ Delete or replace it with `cluster_team({ members: [...] })`. Each member suppor
 The `reviewer` seat is a **policy** restriction, not a sandbox. If an agent must not touch the
 file system at all, restrict it at the OS level.
 
+Member agents are written as `mode: primary` + `hidden: true`, so they never clutter the
+Shift+Tab picker; only `clustercode` itself is user-visible. Switching does not check those flags,
+so hiding a seat does not stop the rotation. Shrinking the team deletes the managed files that are
+no longer needed and leaves hand-written files alone — to remove everything, delete
+`clustercode*.md` from `~/.config/opencode/agents`.
+
 ## How a turn works
 
 ```

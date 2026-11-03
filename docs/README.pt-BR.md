@@ -138,6 +138,11 @@ e `model`.
 O assento `reviewer` é restrição de **política**, não sandbox. Se um agente não pode tocar o sistema
 de arquivos, limite no nível do sistema operacional.
 
+Os agentes membros são escritos como `mode: primary` + `hidden: true`: não incham o seletor de
+Shift+Tab e só o `clustercode` fica visível. `switchAgent` não verifica esses campos, então ocultar
+não impede o revezamento. Reduzir a equipe apaga os arquivos gerenciados que sobraram e preserva os
+escritos à mão; para remover tudo, apague `clustercode*.md` em `~/.config/opencode/agents`.
+
 ## Como um turno funciona
 
 ```

@@ -141,6 +141,12 @@ Remplacez-la avec `cluster_team({ members: [...] })`. Chaque membre accepte `id`
 Le siège `reviewer` est une restriction de **politique**, pas un bac à sable. Pour qu'un agent ne
 puisse pas toucher au système de fichiers, il faut le limiter au niveau de l'OS.
 
+Les agents membres sont écrits en `mode: primary` + `hidden: true` : ils n'encombrent pas le
+sélecteur Shift+Tab, seul `clustercode` est visible. Le changement de siège ne vérifie pas ces
+drapeaux, donc les masquer n'empêche pas la rotation. Réduire l'équipe supprime les fichiers gérés
+devenus inutiles et laisse les fichiers écrits à la main ; pour tout retirer, supprimez
+`clustercode*.md` dans `~/.config/opencode/agents`.
+
 ## Un tour, concrètement
 
 ```
