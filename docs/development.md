@@ -29,6 +29,28 @@ build.mjs         desktop bundle + TUI compile check
 Rule of thumb: if a piece of logic needs a fake host to test, it belongs in a pure module and the
 entry file only wires it up. `scheduler.ts` exists for that reason.
 
+## Module boundaries
+
+`test/architecture.test.ts` reads the source and fails when a boundary is crossed, so this table is
+a check rather than advice:
+
+| Module | May import |
+|---|---|
+| `state.ts` | nothing |
+| `scheduler.ts`, `plan.ts` | `state.ts` |
+| `status.ts` | `rpc.ts` (types) |
+| `store.ts` | `node:fs/promises`, `state.ts` |
+| `snapshot.ts` | `state.ts`, `rpc.ts` |
+| `rpc.ts` | `@opencode/plugin` (types only) |
+| `team.ts` | `node:fs`, `state.ts` |
+| `tools.ts` | `node:child_process`, `state`, `store`, `team`, `plan` |
+| `index.ts` | everything server-side; wiring only |
+| `tui.tsx`, `gui.tsx` | `solid-js`, the host SDK, `rpc.ts`, `status.ts` |
+
+Two consequences worth keeping: the UI halves cannot import server internals (that would create a
+second source of truth), and the pure core cannot import the host SDK (that would make it
+untestable without an OpenCode process).
+
 ## Reference checkout of OpenCode
 
 `opencode/` holds a shallow clone of the host repository, used to check the plugin API against the
@@ -63,7 +85,7 @@ against. If the reference checkout and the installed types disagree, the install
 ## Test strategy
 
 `npm run test` uses `node --test` with native TypeScript type stripping: no bundler, no transpiler,
-no model, no network. 170 assertions currently.
+no model, no network. 187 assertions currently.
 
 - **Pure logic** (state, scheduler, plan, status) is tested directly.
 - **Host interaction** goes through `test/support/harness.ts`, a fake context implementing exactly
@@ -111,6 +133,21 @@ blank. Therefore:
    panel prints `RPC failed: ...` at the top.
 3. Rebuilt the GUI or changed `exports`? Restart the desktop app and the server. The host probes
    entry points once, at startup.
+
+## Pitfalls that already cost a debugging session
+
+- **YAML frontmatter**: a `description` that starts with `[` is parsed as a flow sequence and the
+  whole agent file silently disappears from the list. `JSON.stringify` produces a quoted scalar;
+  `test/team.test.ts` keeps it quoted.
+- **Policy action names**: a read-only seat must deny `tool.use` with resource `edit:*`. An
+  `action: edit` rule matches nothing and grants write access while looking safe.
+- **RPC output schema**: the host decodes it as a closed object. One unlisted field is
+  `rpc.invalid_output` and a permanently empty panel. `test/rpc.test.ts` compares payload to schema.
+- **`resume: false`**: the injected message waits for a wake-up an idle session never receives.
+- **Timers**: a plugin reload that does not clear `setInterval` stacks another heartbeat. `setup`
+  clears the module-level handles first and `unref()`s them.
+- **Windows text encoding**: rewriting UTF-8 files through PowerShell text pipelines can corrupt
+  them. Use the editor or Node with an explicit `utf8`.
 
 ## Verify gate notes
 

@@ -34,7 +34,7 @@ import {
   syncClusterAgent,
   toMembers,
 } from "./team.ts";
-import { type PlannedTask, generatePlan, toRuntimeTasks, validatePlan } from "./plan.ts";
+import { generatePlan, toRuntimeTasks, validatePlan } from "./plan.ts";
 
 /** What the tools need from the hosting plugin. Kept small so tests can fake it. */
 export interface Runtime {
@@ -205,6 +205,21 @@ function dagLines(tasks: Task[]): string {
     .join("\n");
 }
 
+/**
+ * The cost warning from the original project, made concrete at the tool boundary:
+ * a run with no round cap *and* the stagnation guard disabled has nothing that stops
+ * a spinning model. Say so in the tool result instead of trusting the docs to be read.
+ */
+function guardNote(state: ClusterState): string {
+  if (state.maxRounds === null && state.maxStagnant === 0) {
+    return (
+      "\nwarning: both guardrails are off (no round cap, stagnation guard disabled). " +
+      "A model that stops making progress will keep burning tokens — set maxRounds or maxStagnant."
+    );
+  }
+  return "";
+}
+
 /** Manual task shape accepted by `cluster_plan`. */
 interface ManualTask {
   id?: string;
@@ -282,6 +297,7 @@ export function registerTools(ctx: any, runtime: Runtime) {
           content:
             `${teamNote}built a ${state.tasks.length}-task workflow from the goal:\n${dagLines(state.tasks)}${issues}\n` +
             `heartbeat: ${state.heartbeat ? `on (${state.heartbeatMs / 1000}s)` : "off"}` +
+            guardNote(state) +
             startMessage(state),
         };
       },
@@ -456,7 +472,7 @@ export function registerTools(ctx: any, runtime: Runtime) {
         return {
           content:
             `${append ? `appended ${planned.length} task(s); queue now has ${total}` : `created a ${total}-task queue and started the run`}.${teamNote}\n` +
-            `${brief(state)}${warn}${issuesText}` +
+            `${brief(state)}${warn}${issuesText}${guardNote(state)}` +
             startMessage(state),
         };
       },
@@ -637,5 +653,3 @@ export function registerTools(ctx: any, runtime: Runtime) {
     });
   });
 }
-
-export type { PlannedTask };

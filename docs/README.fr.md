@@ -36,6 +36,22 @@ laisser tourner un run pendant 24 heures.
 | **Trois points d'entrée** | Serveur (hooks, outils, RPC), TUI (statut + panneau `/cluster`), Desktop (panneau latéral + pastille + menus). |
 | **Ajout et reprise** | `cluster_plan({ append: true })` allonge une file en cours. `cluster_retry` remet les tâches échouées dans la file. |
 
+## Principes de conception
+
+Sept règles, chacune tenue par un test. [design.md](design.md) fait la carte
+principe → module → test et liste les écarts assumés avec le projet d'origine.
+
+1. **Un déclencheur, un ordonnanceur.** Le hook idle et le battement appellent tous deux `decide()`.
+2. **`resume: true` ferme la boucle.** Sans lui, une session inactive attend un réveil qui n'arrive jamais.
+3. **Des preuves, pas une auto-évaluation.** `done` exécute la commande d'acceptation.
+4. **S'arrêter sur une prémisse cassée.** Une dépendance en échec n'est pas satisfaite ; un graphe
+   bloqué s'arrête avec une raison.
+5. **Céder par défaut.** Les sous-agents en arrière-plan passent devant, les permissions et les
+   reprises appartiennent aux autres plugins, et la carte système reste constante pour le cache.
+6. **Les fichiers sont l'API.** Un siège est un fichier markdown géré ; un fichier écrit à la main
+   n'est jamais touché.
+7. **Un seul chemin de données.** Instantané → RPC → les deux interfaces, avec les mêmes libellés.
+
 ## Installation
 
 Clonez, puis pointez OpenCode vers le **répertoire** (pas un fichier) dans
@@ -178,12 +194,26 @@ les libellés de `status.ts`, donc le pied de page et le panneau ne peuvent pas 
 
 Tout est évalué dans `decide()` ; il n'existe pas de seconde copie des règles.
 
+## Cohabitation
+
+clustercode ne revendique délibérément pas les zones qu'un autre plugin possède déjà :
+
+| Zone | Propriétaire |
+|---|---|
+| Permissions, délais de shell longs | votre plugin de permissions (`permission.evaluate` n'est jamais enregistré) |
+| Reprise après erreur | votre plugin de reprise (`retry` n'est jamais enregistré : deux plugins qui écrivent `event.decision`, c'est un pile ou face) |
+| Prompt système | l'hôte ; clustercode ajoute seulement une carte constante, une fois par tour |
+| Modèle par siège | vous, via le champ `model` d'un membre |
+
+Deux plugins qui enregistrent tous deux `retry` ne peuvent pas gagner ensemble : le dernier
+enregistré décide. C'est pour cela que celui-ci reste en dehors.
+
 ## Vérifié
 
 ```
 npm run check
   typecheck (tsc --noEmit, TSX inclus)
-  170 assertions (node --test, sans modèle, sans réseau)
+  187 assertions (node --test, sans modèle, sans réseau)
   build : dist/gui-experimental.cjs + vérification de compilation TUI
   sonde d'entrées : serveur / tui / desktop résolus
   câblage TUI + câblage desktop

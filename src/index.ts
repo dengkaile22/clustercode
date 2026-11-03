@@ -229,7 +229,18 @@ export default {
       }),
     );
 
-    // ── 2. system card ────────────────────────────────────────────────────
+    // ── 2. deliberately NOT registered ────────────────────────────────────
+    // `retry` and `permission.evaluate` belong to other plugins on this machine
+    // (the original author's setup used an `unlimited` plugin for exactly that).
+    // Two plugins writing `event.decision` means only the last registration wins,
+    // which is impossible to reason about, so clustercode yields the whole area:
+    // it never decides retries, never edits permissions, and never rewrites the
+    // system prompt wholesale — it only appends one stable card below.
+    //
+    // Same reason for `context`: the card text is constant so the prompt cache
+    // stays warm, and the idempotency check keeps it to one copy per turn.
+
+    // ── 3. system card ────────────────────────────────────────────────────
     // Stable text, injected once: changing it every turn would invalidate the prompt cache.
     registrations.push(
       await ctx.session.hook("context", async (event: any) => {
@@ -349,5 +360,3 @@ export default {
     };
   },
 };
-
-export type { ClusterState };

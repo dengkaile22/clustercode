@@ -36,6 +36,22 @@ durante 24 horas.
 | **Tres puntos de entrada** | Servidor (hooks, herramientas, RPC), TUI (estado en el pie + panel `/cluster`), Desktop (panel lateral + cápsula + menús). |
 | **Añadir y reintentar** | `cluster_plan({ append: true })` amplía una cola en marcha. `cluster_retry` devuelve las tareas fallidas a la cola. |
 
+## Principios de diseño
+
+Siete reglas, cada una sostenida por una prueba. [design.md](design.md) traza
+principio → módulo → prueba y enumera las diferencias deliberadas con el proyecto original.
+
+1. **Un disparador, un planificador.** El hook idle y el latido llaman a `decide()`.
+2. **`resume: true` cierra el bucle.** Sin él, una sesión inactiva espera un despertar que no llega.
+3. **Evidencia, no autoevaluación.** `done` ejecuta el comando de aceptación.
+4. **Parar ante una premisa rota.** Una dependencia fallida no está satisfecha; un grafo bloqueado
+   se detiene con una razón.
+5. **Ceder por defecto.** El trabajo en segundo plano manda, los permisos y los reintentos son de
+   otros plugins, y la tarjeta del sistema no cambia para no romper la caché del prompt.
+6. **Los archivos son la API.** Un asiento es un markdown gestionado; un archivo escrito a mano
+   nunca se toca.
+7. **Un solo camino de datos.** Instantánea → RPC → ambas interfaces, con los mismos textos.
+
 ## Instalación
 
 Clona el repositorio y apunta OpenCode al **directorio** (no a un archivo) en
@@ -177,12 +193,26 @@ un escritorio conectado a un servidor remoto se comporta igual que uno local. Co
 
 Todo se evalúa en `decide()`; no hay una segunda copia de las reglas.
 
+## Coexistencia
+
+clustercode no reclama a propósito las áreas que otro plugin ya puede tener:
+
+| Área | Dueño |
+|---|---|
+| Permisos, tiempos de shell largos | tu plugin de permisos (`permission.evaluate` nunca se registra) |
+| Reintentos con espera | tu plugin de reintentos (`retry` nunca se registra: dos plugins escribiendo `event.decision` es una moneda al aire) |
+| Prompt del sistema | el host; clustercode solo añade una tarjeta constante, una vez por turno |
+| Modelo por asiento | tú, con el campo `model` del miembro |
+
+Dos plugins que registran `retry` no pueden ganar los dos: decide el último registrado. Por eso
+este se queda fuera.
+
 ## Verificado
 
 ```
 npm run check
   typecheck (tsc --noEmit, TSX incluido)
-  170 aserciones (node --test, sin modelo, sin red)
+  187 aserciones (node --test, sin modelo, sin red)
   build: dist/gui-experimental.cjs + comprobación de compilación de la TUI
   sondeo de entradas: servidor / tui / escritorio resueltos
   cableado de la TUI + cableado del escritorio

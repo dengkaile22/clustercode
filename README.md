@@ -36,6 +36,23 @@ things an unattended run needs:
 | **Three entry points** | Server (hooks, tools, RPC), TUI (footer status + `/cluster` panel), Desktop (side panel + composer pill + menu entries). |
 | **Append & retry** | `cluster_plan({ append: true })` grows a live queue. `cluster_retry` puts failed tasks back. |
 
+## Design principles
+
+Seven rules the code is built around. Each one has a test; [docs/design.md](docs/design.md) maps
+principle → module → test, and lists the deliberate divergences from the original project.
+
+1. **One trigger, one scheduler.** The idle hook and the heartbeat both call `decide()`; the guard
+   order exists once.
+2. **`resume: true` closes the loop.** Without it an idle session waits for a wake-up it never gets.
+3. **Evidence over self-assessment.** `done` runs the acceptance command; the model's opinion is not
+   evidence.
+4. **Stop on a broken premise.** A failed dependency is not satisfied, and a deadlocked graph stops
+   immediately with a reason.
+5. **Yield by default.** Background subagents win, other plugins own permissions and retries, and the
+   system card is constant so the prompt cache stays warm.
+6. **Files are the API.** A seat is a managed markdown file; hand-written files are never touched.
+7. **One data path.** Snapshot → RPC → both UIs, with shared display functions.
+
 ## Install
 
 Clone, then point OpenCode at the **directory** (not a file) in `~/.config/opencode/opencode.json`:
@@ -176,12 +193,29 @@ so the footer and the panel cannot disagree about the numbers.
 
 Every guard is evaluated in `decide()`; there is no second copy of the rules.
 
+## Coexistence
+
+clustercode deliberately does not claim the parts of the host that another plugin may already own:
+
+| Area | Who owns it |
+|---|---|
+| Permissions, long shell timeouts | your permissions plugin (`permission.evaluate` is never registered) |
+| Retry backoff | your retry plugin (`retry` is never registered — two plugins writing `event.decision` is a coin flip) |
+| System prompt | the host; clustercode only *appends* one constant card, once per turn |
+| Model choice per seat | you, via the `model` field on a member |
+
+Two plugins that both register `retry` cannot both win: the last registration decides. That is why
+this one stays out of it, and why `cluster_auto` documents the round cap instead of silently
+running forever.
+
 ## Verified
 
 ```
 npm run check
   typecheck (tsc --noEmit, TSX included)
-  170 test assertions (node --test, no model, no network)
+  187 test assertions (node --test, no model, no network)
+  architecture invariants: module boundaries, read from the source and enforced
+  documentation invariants: six languages agree on the numbers, links resolve
   build: dist/gui-experimental.cjs + TUI compile check
   entry probe: server / tui / desktop all resolve
   TUI wiring + desktop wiring
@@ -204,8 +238,9 @@ npm run check:entry  # reproduce the host's exports probe
 Tests redirect the agent directory with `CLUSTERCODE_AGENTS_DIR`, so they never write your real
 `~/.config/opencode/agents`.
 
-`docs/development.md` explains the reference checkout of the OpenCode source under `opencode/`
-and how to re-check the host API against it.
+`docs/design.md` maps each principle to its module and its test, lists the parity table against
+the original project and the deliberate divergences. `docs/development.md` explains the reference
+checkout of the OpenCode source under `opencode/` and how to re-check the host API against it.
 
 ## Known limitations
 

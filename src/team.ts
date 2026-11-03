@@ -196,8 +196,6 @@ export interface ClusterAgentSync {
   reason?: string;
 }
 
-export const clusterAgentPath = () => join(agentsDir(), `${CLUSTER_ID}.md`);
-
 /**
  * Write the Shift+Tab entry point. A same-named file that this plugin did not write
  * is left alone unless `adopt` is set.

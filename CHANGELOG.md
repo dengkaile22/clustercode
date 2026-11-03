@@ -4,6 +4,38 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`docs/design.md`**: the map from principles to modules to tests, a parity table against
+  `unlimited-agent-cluster` (无限制 agent 群), the deliberate divergences, and the non-goals.
+- **Architecture invariants test**: the pure core may not import the host SDK, file-system access
+  stays in `store.ts` / `team.ts`, process spawning stays in `tools.ts`, and the UI halves may only
+  import the RPC contract and the display helpers.
+- **Documentation invariants test**: all six language versions must state the same assertion count,
+  list every translation in their switcher, and resolve every relative link.
+- A **guardrail warning** in the tool result when a run has no round cap *and* the stagnation guard
+  disabled, instead of leaving that only in the README.
+
+### Changed
+
+- README and all five translations gained a **design principles** section and a **coexistence**
+  section: permissions and retry policy are deliberately left to other plugins.
+- `docs/development.md` now documents the module boundaries as a checkable table and lists the
+  pitfalls that already cost a debugging session (YAML quoting, policy action names, RPC schema,
+  `resume: false`, timer stacking, UTF-8 handling on Windows).
+- Removed unused exports (`clusterAgentPath`, `snapshotSize`, the `PlannedTask` re-export) so the
+  public surface of each module matches what is used.
+
+### Fixed
+
+- Heartbeat evaluates the guards **before** the wake cooldown, so a run that hit its round cap or
+  went stagnant is stopped immediately instead of at the next interval.
+- `cluster_plan({ append: true })` preserves the turn counter, the round cap and the creation time,
+  so appending to a live queue continues the run instead of restarting it.
+- `cluster_retry` only resets tasks that actually failed, with a clear message otherwise.
+
 ## [0.1.0] - 2026-11-04
 
 First public version. An independent rewrite of the ideas in `unlimited-agent-cluster`
@@ -36,8 +68,8 @@ First public version. An independent rewrite of the ideas in `unlimited-agent-cl
 - **Persistence** with an in-memory cache and per-session serialised writes, plus a `FileStorage`
   backend for environments without plugin storage.
 - **Documentation** in English, Simplified Chinese, French, Japanese, Spanish and Portuguese.
-- **Checks**: typecheck, 170 test assertions, desktop bundle, TUI compile check, host-style entry
-  probe, TUI wiring check, desktop wiring check.
+- **Checks**: typecheck, 187 test assertions, desktop bundle, TUI compile check, host-style entry
+  probe, TUI wiring check, desktop wiring check, architecture invariants, documentation invariants.
 
 ### Notes
 

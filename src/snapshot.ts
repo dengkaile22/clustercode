@@ -61,7 +61,3 @@ export function readSnapshot(now = Date.now()): SnapshotView {
 export function resetSnapshots(): void {
   sessions.clear();
 }
-
-export function snapshotSize(): number {
-  return sessions.size;
-}

@@ -126,6 +126,27 @@ describe("cluster_plan", () => {
     assert.match(result.content, /repaired/);
     assert.match(result.content, /cycle/);
   });
+
+  it("warns when both guardrails are disabled", async () => {
+    await setup();
+    const result = await harness.callTool("cluster_plan", {
+      goal: "x",
+      tasks: [{ id: "t1", title: "a" }],
+      maxStagnant: 0,
+    });
+    assert.match(result.content, /both guardrails are off/);
+  });
+
+  it("stays quiet while at least one guardrail is armed", async () => {
+    await setup();
+    const result = await harness.callTool("cluster_plan", {
+      goal: "x",
+      tasks: [{ id: "t1", title: "a" }],
+      maxRounds: 3,
+      maxStagnant: 0,
+    });
+    assert.doesNotMatch(result.content, /both guardrails/);
+  });
 });
 
 describe("cluster_update and the verify gate", () => {
@@ -287,6 +308,12 @@ describe("cluster_auto", () => {
   it("rejects an empty goal", async () => {
     await setup();
     assert.match((await harness.callTool("cluster_auto", { goal: "  " })).content, /goal is empty/);
+  });
+
+  it("carries the guardrail warning into the generated run", async () => {
+    await setup();
+    const result = await harness.callTool("cluster_auto", { goal: "x", maxStagnant: 0 });
+    assert.match(result.content, /both guardrails are off/);
   });
 });
 
