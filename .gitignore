@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+tmp/
+.clustercode/
+
+# Reference checkout of the host (see docs/development.md). Not part of this package.
+/opencode/

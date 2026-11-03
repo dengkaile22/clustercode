@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "clustercode",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Long-running agent cluster for OpenCode: task DAG, round-robin team members, verify gate, 24h heartbeat, TUI status bar and Desktop panel.",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "agent",
+    "cluster",
+    "task-dag",
+    "orchestration"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./tui": "./src/tui.tsx",
+    "./gui-experimental": "./dist/gui-experimental.cjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "dist",
+    "docs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.ts",
+    "build": "node build.mjs",
+    "check:entry": "node tools/check-entrypoints.mjs",
+    "check:tui": "node tools/check-tui.mjs",
+    "check:gui": "node tools/check-gui.mjs",
+    "check": "npm run typecheck && npm run test && npm run build && npm run check:entry && npm run check:tui && npm run check:gui"
+  },
+  "peerDependencies": {
+    "@opencode/plugin": ">=2.0.27 <3"
+  },
+  "peerDependenciesMeta": {
+    "@opencode/plugin": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@opencode/plugin": "2.2.5",
+    "@opentui/core": "^0.8.0",
+    "@opentui/solid": "^0.8.0",
+    "@types/node": "^24.12.2",
+    "esbuild": "^0.28.2",
+    "solid-js": "^1.9.18",
+    "typescript": "^5.9.3"
+  }
+}
